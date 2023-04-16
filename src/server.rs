@@ -1,6 +1,4 @@
-use std::{net::{TcpListener, SocketAddrV4, TcpStream}, io::{Error, Read, Write}};
-
-use crate::node::Node;
+use std::{net::{TcpListener, SocketAddrV4, TcpStream}, io::{Error, Read, Write}, thread, str::FromStr};
 
 const MESSAGE_LENGTH: usize = 64;
 
@@ -9,15 +7,16 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(&self, addr: SocketAddrV4) -> Result<&Self, Error> {
-        let listener = <Server as Node>::get_listener_for_address(addr);
+    pub fn new(addr: SocketAddrV4) -> Result<Server, Error> {
+        let listener = Server::get_listener_for_address(addr);
         match listener {
-            Ok(listener) => Ok(&Server { listener }),
+            Ok(listener) => Ok(Server { listener }),
             Err(error) => Err(error)
         }
     }
 
     pub fn start_listening(&self) {
+        // return;
         for stream in self.listener.incoming() {
             match stream.ok() {
                 Some(incoming_stream) => self.handle_incoming_stream(incoming_stream),
@@ -26,7 +25,7 @@ impl Server {
         }
     }
 
-    fn handle_incoming_stream(&self, stream: TcpStream) {
+    fn handle_incoming_stream(&self, mut stream: TcpStream) {
         let mut read_bytes = [0u8; MESSAGE_LENGTH];
         stream.read(&mut read_bytes);
 
@@ -37,6 +36,14 @@ impl Server {
         stream.write(response_data);
         stream.flush();
     }
+
+    fn get_listener_for_address(addr: SocketAddrV4) -> Result<TcpListener, Error> {
+        TcpListener::bind(addr)
+    }
 }
 
-impl Node for Server { }
+fn main() {
+    let server_address = SocketAddrV4::from_str("127.0.0.1:8000").expect("Unable to create server address");
+    let server = Server::new(server_address).expect("Unable to create server.");
+    server.start_listening();
+}

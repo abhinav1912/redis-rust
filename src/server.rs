@@ -10,7 +10,10 @@ impl Server {
     pub fn new(addr: SocketAddrV4) -> Result<Server, Error> {
         let listener = Server::get_listener_for_address(addr);
         match listener {
-            Ok(listener) => Ok(Server { listener }),
+            Ok(listener) => {
+                listener.set_nonblocking(true)?;
+                Ok(Server { listener })
+            },
             Err(error) => Err(error)
         }
     }

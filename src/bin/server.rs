@@ -19,11 +19,11 @@ impl Server {
     }
 
     pub fn start_listening(&self) {
-        // return;
+        println!("Listening for connections on port {:?}", self.listener.local_addr().unwrap().port());
         for stream in self.listener.incoming() {
             match stream.ok() {
                 Some(incoming_stream) => self.handle_incoming_stream(incoming_stream),
-                None => println!("Unable to unwrap stream!")
+                None => ()
             }
         }
     }
